@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require('fs');
 const { v4: uuid } = require('uuid');
 const HttpError = require('../models/errorModel');
-const { post } = require('../routes/userRoutes');
+
 
 
 
@@ -19,8 +19,8 @@ const CreatePost = async (req, res, next) => {
         }
         const { thumbnail } = req.files;
         //check file size
-        if (thumbnail.size > 20000000) {
-            return next(new HttpError("Thumbnail too big . file should be less than 2mb"))
+        if (thumbnail.size > 2000000) {
+            return next(new HttpError("Thumbnail too big. File should be less than 2mb", 422))
         }
         let fileName = thumbnail.name;
         let splittedFileName = fileName.split('.')
@@ -74,7 +74,7 @@ const getSinglePost = async (req, res, next) => {
             return next(new HttpError("POST NOT FOUND :(", 404))
         }
         console.log(post)
-        res.status(200).send({data: post})
+        res.status(200).json(post)
     } catch (error) {
         return next(new HttpError("user not found , Sorry!"))
     }
@@ -100,7 +100,7 @@ const getUserPosts = async (req, res, next) => {
     try {
         const { id } = req.params;
         const posts = await Post.find({ creator: id }).sort({ createdAt: -1 })
-        res.status(200).send({data: posts})
+        res.status(200).json(posts)
     } catch (error) {
         return next(new HttpError(error))
     }
@@ -120,8 +120,8 @@ const editPost = async (req, res, next) => {
 
         // React Quill has a paragraph opening and closing tag with a break tag in between so there are 
         // 11 characters in there already.
-        if (!title || !category || description < 12) {
-            return next(new HttpError("Fill in all fields", 422));
+        if (!title || !category || !description || description.length < 12) {
+            return next(new HttpError("Fill in all fields and ensure description is long enough", 422));
         }
 
         // Get old post from database 
@@ -141,8 +141,8 @@ const editPost = async (req, res, next) => {
                 // Upload new thumbnail
                 const { thumbnail } = req.files;
                 // Check file size 
-                if (thumbnail.size > 200000) {
-                    return next(new HttpError("Thumbnail too big, should be less than 2MB"));
+                if (thumbnail.size > 2000000) {
+                    return next(new HttpError("Thumbnail too big, should be less than 2MB", 422));
                 }
                 fileName = thumbnail.name;
                 let splittedFileName = fileName.split('.');
@@ -160,6 +160,8 @@ const editPost = async (req, res, next) => {
             }
 
             res.status(200).json(updatedPost);
+        } else {
+            return next(new HttpError("You are not authorized to edit this post.", 403));
         }
     } catch (error) {
         return next(new HttpError(error));
@@ -184,24 +186,36 @@ const deletePost = async (req, res, next) => {
         }
 
         const post = await Post.findById(postId);
-        const fileName = post?.thumbnail;
+        if (!post) {
+            return next(new HttpError("Post not found.", 404));
+        }
+
+        const fileName = post.thumbnail;
 
         // delete thumbnail from uploads folder
-        fs.unlink(path.join(__dirname, '..', 'uploads', fileName), async (err) => {
-            if (err) {
-                return next(new HttpError(err));
-            } else {
-                await Post.findByIdAndDelete(postId);
+        const thumbnailPath = path.join(__dirname, '..', 'uploads', fileName);
+        if (fs.existsSync(thumbnailPath)) {
+            fs.unlink(thumbnailPath, async (err) => {
+                if (err) {
+                    return next(new HttpError(err));
+                }
+                await finalizeDelete();
+            });
+        } else {
+            await finalizeDelete();
+        }
 
-                // Find user and reduce post count by 1
-                const currentUser = await User.findById(req.user.id);
-                const userPostCount = currentUser?.posts - 1; // Corrected variable name
+        async function finalizeDelete() {
+            await Post.findByIdAndDelete(postId);
 
+            // Find user and reduce post count by 1
+            const currentUser = await User.findById(req.user.id);
+            if (currentUser) {
+                const userPostCount = Math.max(0, (currentUser.posts || 0) - 1);
                 await User.findByIdAndUpdate(req.user.id, { posts: userPostCount });
             }
-        });
-
-        res.json(`Post ${postId} deleted successfully.`);
+            res.status(200).json(`Post ${postId} deleted successfully.`);
+        }
     } catch (err) {
         return next(new HttpError(err));
     }
@@ -217,7 +231,7 @@ module.exports = {
     getCatPosts,
     getPosts,
     getSinglePost,
-    getUserPosts ,
+    getUserPosts,
     editPost,
     deletePost
 

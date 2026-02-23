@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Loader from '../Components/Loader';
+import DefaultAvatar from '../images/avatar1.jpg';
 
 const Authors = () => {
   const [authors, setAuthors] = useState([]);
@@ -30,10 +31,10 @@ const Authors = () => {
     <section className="authors">
       {authors && authors.length > 0 ? (
         <div className="container authors__container">
-          {authors.map(({_id:id, avatar, name, posts }) => (
+          {authors.map(({ _id: id, avatar, name, posts }) => (
             <Link key={id} to={`/posts/users/${id}`} className="author">
               <div className="author__avatar">
-                <img src={`${process.env.REACT_APP_ASSETS_URL}/uploads/${avatar}`} alt={`img of ${name}`} />
+                <img src={avatar ? `${process.env.REACT_APP_ASSETS_URL}${avatar}` : DefaultAvatar} alt={`img of ${name}`} />
               </div>
               <div className="author__info">
                 <h4>{name}</h4>
@@ -43,7 +44,7 @@ const Authors = () => {
           ))}
         </div>
       ) : (
-        <h2 className="center">No users/authors found</h2>
+        <h2 className="center">No authors found</h2>
       )}
     </section>
   );

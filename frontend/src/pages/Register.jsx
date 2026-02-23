@@ -24,20 +24,21 @@ const Register = () => {
     e.preventDefault()
     setError('')
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/users/register
-      `, userData)
-      const newUser = await response.data;
+      const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/users/register`, userData)
+      const newUser = response.data;
       console.log(newUser);
-      if(!newUser){
+      if (!newUser) {
         setError("Couldn't register user. Please try again. ")
+      } else {
+        navigate('/login')
       }
-      navigate('/login')
     } catch (err) {
-      setError(err.response.data.message)
+      console.error(err);
+      setError(err?.response?.data?.message || err?.message || "Something went wrong. Please try again later.")
     }
   }
-  
-  
+
+
 
   return (
     <section className="register">
