@@ -26,9 +26,13 @@ const PostItem = ({
   return (
     <article className='post'>
       <div className="post__thumbnail">
-        {/* ✅ FIXED IMAGE PATH */}
+        {/*  FIXED IMAGE PATH */}
         <img
-          src={`${process.env.REACT_APP_ASSETS_URL}${thumbnail}`}
+          src={
+            thumbnail
+              ? `${process.env.REACT_APP_ASSETS_URL}${thumbnail}`
+              : "https://via.placeholder.com/300x200"
+          }
           alt={title}
         />
       </div>
