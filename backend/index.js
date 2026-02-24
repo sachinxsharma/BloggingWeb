@@ -18,20 +18,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --------------------
-// CORS CONFIG (Production + Development Safe)
+// CORS CONFIG (FINAL WORKING VERSION)
 // --------------------
-const allowedOrigins = [
-  "http://localhost:3000", // local dev
-  process.env.CLIENT_URL   // production (Vercel)
-];
-
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+
+    // allow localhost
+    if (origin === "http://localhost:3000") {
+      return callback(null, true);
     }
+
+    // allow ALL vercel deployments
+    if (origin.includes("vercel.app")) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true
 }));
