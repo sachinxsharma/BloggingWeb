@@ -18,10 +18,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --------------------
-// CORS CONFIG (FINAL WORKING VERSION)
+// CORS CONFIG (Production + Development Safe)
 // --------------------
+const allowedOrigins = [
+  "http://localhost:3000", // local dev
+  process.env.CLIENT_URL   // production (Vercel)
+];
+
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
