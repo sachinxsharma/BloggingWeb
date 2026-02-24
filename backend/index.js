@@ -21,23 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS CONFIG (FINAL WORKING VERSION)
 // --------------------
 app.use(cors({
-  origin: function (origin, callback) {
-
-    // allow requests with no origin (like Postman)
-    if (!origin) return callback(null, true);
-
-    // allow localhost
-    if (origin === "http://localhost:3000") {
-      return callback(null, true);
-    }
-
-    // allow ALL vercel deployments
-    if (origin.includes("vercel.app")) {
-      return callback(null, true);
-    }
-
-    return callback(new Error("Not allowed by CORS"));
-  },
+  origin: true,
   credentials: true
 }));
 
