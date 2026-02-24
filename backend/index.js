@@ -11,44 +11,76 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-app.use(express.json({ extended: true }));
+// --------------------
+// Body Parsers
+// --------------------
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ FIXED CORS
+// --------------------
+// CORS CONFIG (Production + Development Safe)
+// --------------------
+const allowedOrigins = [
+  "http://localhost:3000", // local dev
+  process.env.CLIENT_URL   // production (Vercel)
+];
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
+// --------------------
+// File Upload Middleware
+// --------------------
 app.use(upload());
 
-// uploads folder serve
+// --------------------
+// Static Folder (Uploads)
+// --------------------
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// routes
+// --------------------
+// Routes
+// --------------------
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 
-// test route
-app.get('/', async (req, res) => {
+// --------------------
+// Test Route
+// --------------------
+app.get('/', (req, res) => {
   res.send('Backend running 🚀');
 });
 
-// error middleware
+// --------------------
+// Error Middleware
+// --------------------
 app.use(notFound);
 app.use(errorHandler);
 
-// DB connect + server start
+// --------------------
+// Database Connection + Server Start
+// --------------------
 console.log("⏳ Connecting to MongoDB...");
+
 connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected Successfully");
-    app.listen(process.env.PORT || 5000, () =>
-      console.log(`🚀 Server running on port ${process.env.PORT || 5000}`)
+
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
     );
   })
   .catch(error => {
     console.error("❌ MongoDB Connection Error:", error);
     process.exit(1);
   });
-
