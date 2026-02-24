@@ -23,7 +23,7 @@ const DeletePost = ({ postId: id }) => {
   const removePost = async () => { // Pass id parameter directly
     setIsLoading(true)
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/posts/${id}`, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/posts/${id}`)
       if (response.status == 200) {
         if (location.pathname == `/myposts/${currentUser.id}`) {
           navigate(0);
@@ -37,12 +37,12 @@ const DeletePost = ({ postId: id }) => {
     }
   };
 
-  if(isLoading){
-    return <Loader/>
+  if (isLoading) {
+    return <Loader />
   }
 
   return (
-    <Link className='btn sm danger' onClick={() => removePost(id)}>Delete</Link> 
+    <Link className='btn sm danger' onClick={() => removePost(id)}>Delete</Link>
   )
 };
 

@@ -10,7 +10,7 @@ const Authors = () => {
 
   const getAuthors = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/users`);
+      const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/users`);
       setAuthors(response.data);
     } catch (error) {
       console.log(error);

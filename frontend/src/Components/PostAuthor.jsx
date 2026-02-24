@@ -20,12 +20,14 @@ const PostAuthor = ({ authorID, createdAt }) => {
   useEffect(() => {
     const getAuthor = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/users/${authorID}`);
+        const response = await axios.get(
+          `${process.env.REACT_APP_BASE_URL}/api/users/${authorID}`
+        );
         setAuthor(response?.data);
       } catch (error) {
         console.log(error);
       }
-    }
+    };
     getAuthor();
   }, [authorID]);
 

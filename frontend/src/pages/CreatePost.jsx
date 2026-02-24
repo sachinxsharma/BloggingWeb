@@ -45,15 +45,15 @@ const CreatePost = () => {
 
   const createPost = async (e) => {
     e.preventDefault();
-  
+
     const postData = new FormData();
     postData.set('title', title);
     postData.set('category', category);
     postData.set('description', description);
     postData.set('thumbnail', thumbnail);
-  
+
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/posts`, postData, {
+      const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/posts`, postData, {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`

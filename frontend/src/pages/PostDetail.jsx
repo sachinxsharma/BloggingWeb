@@ -20,7 +20,7 @@ const PostDetail = () => {
     const getPosts = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/posts/${id}`);
+        const response = axios.get(`${process.env.REACT_APP_BASE_URL}/api/posts/${id}`);
         console.log(response)
         setPosts(response.data);
       } catch (error) {
