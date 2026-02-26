@@ -6,7 +6,11 @@ const {
     getSinglePost,
     getUserPosts,
     editPost,
-    deletePost
+    deletePost,
+    likePost,
+    dislikePost,
+    addComment,
+    getPostComments
 
 } = require("../controllers/postController")
 const authMiddleware = require('../middleware/authMiddleware');
@@ -21,5 +25,9 @@ router.get('/categories/:category', getCatPosts);
 router.get('/users/:id', getUserPosts);
 router.patch('/:id', authMiddleware, editPost);
 router.delete('/:id', authMiddleware, deletePost);
+router.patch('/:id/like', authMiddleware, likePost);
+router.patch('/:id/dislike', authMiddleware, dislikePost);
+router.post('/:id/comments', authMiddleware, addComment);
+router.get('/:id/comments', getPostComments);
 
-module.exports = router 
+module.exports = router

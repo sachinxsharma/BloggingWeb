@@ -8,8 +8,9 @@ const postSchema = new Schema({
     },
     description: { type: String, required: true },
     creator: { type: Schema.Types.ObjectId, ref: "User" },
-    title: { type: String, required: true },
-    thumbnail: {type: String, required:true},
+    thumbnail: { type: String, required: true },
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    dislikes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 }, { timestamps: true })
 
 

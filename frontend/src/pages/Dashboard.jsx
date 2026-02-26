@@ -28,7 +28,7 @@ const Dashboard = () => {
 
       setIsLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/posts/users/${id}`,
+        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/posts/users/${id}`,
           { withCredentials: true, headers: { Authorization: `Bearer ${token}` } })
         setPosts(response.data)
       } catch (error) {

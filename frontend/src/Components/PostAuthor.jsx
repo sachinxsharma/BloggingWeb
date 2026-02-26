@@ -21,7 +21,7 @@ const PostAuthor = ({ authorID, createdAt }) => {
     const getAuthor = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BASE_URL}/api/users/${authorID}`
+          `${process.env.REACT_APP_BASE_URL}/users/${authorID}`
         );
         setAuthor(response?.data);
       } catch (error) {

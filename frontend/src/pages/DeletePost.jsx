@@ -23,7 +23,7 @@ const DeletePost = ({ postId: id }) => {
   const removePost = async () => { // Pass id parameter directly
     setIsLoading(true)
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/posts/${id}`)
+      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/posts/${id}`)
       if (response.status == 200) {
         if (location.pathname == `/myposts/${currentUser.id}`) {
           navigate(0);

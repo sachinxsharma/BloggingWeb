@@ -13,7 +13,7 @@ const AuthorPosts = () => {
     const fetchPosts = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/posts/users/${id}`);
+        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/posts/users/${id}`);
         setPosts(response?.data);
       } catch (err) {
         console.log(err);

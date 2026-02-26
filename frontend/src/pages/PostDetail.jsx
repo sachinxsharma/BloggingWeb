@@ -7,6 +7,8 @@ import DeletePost from './DeletePost';
 import { UserContext } from '../context/userContext';
 import axios from 'axios';
 import PostAuthor from '../Components/PostAuthor';
+import LikeDislike from '../Components/LikeDislike';
+import CommentSection from '../Components/CommentSection';
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -20,7 +22,7 @@ const PostDetail = () => {
     const getPosts = async () => {
       setIsLoading(true);
       try {
-        const response = axios.get(`${process.env.REACT_APP_BASE_URL}/api/posts/${id}`);
+        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/posts/${id}`);
         console.log(response)
         setPosts(response.data);
       } catch (error) {
@@ -79,6 +81,8 @@ const PostDetail = () => {
             <img src={`${process.env.REACT_APP_ASSETS_URL}${post.thumbnail}`} alt="" />
           </div>
           <p dangerouslySetInnerHTML={{ __html: post.description }}></p>
+          <LikeDislike postId={id} initialLikes={post.likes} initialDislikes={post.dislikes} />
+          <CommentSection postId={id} />
         </div>
       }
     </section>

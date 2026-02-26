@@ -47,7 +47,7 @@ const EditPost = () => {
   useEffect(() => {
     const getPost = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/posts/${id}`)
+        const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/posts/${id}`)
         setTitle(response.data.title)
         setDescription(response.data.description)
       } catch (error) {

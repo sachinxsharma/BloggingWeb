@@ -1,5 +1,6 @@
 const Post = require('../models/postModel');
 const User = require("../models/userModel");
+const Comment = require('../models/commentModel');
 const path = require("path");
 const fs = require('fs');
 const { v4: uuid } = require('uuid');
@@ -221,6 +222,99 @@ const deletePost = async (req, res, next) => {
     }
 };
 
+// ----------- Like a post
+// PATCH : api/posts/:id/like
+//PROTECTED
+const likePost = async (req, res, next) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.user.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return next(new HttpError("Post not found.", 404));
+        }
+
+        if (post.likes.includes(userId)) {
+            // Unlike
+            post.likes = post.likes.filter(id => id.toString() !== userId);
+        } else {
+            // Like and remove from dislikes if present
+            post.likes.push(userId);
+            post.dislikes = post.dislikes.filter(id => id.toString() !== userId);
+        }
+        await post.save();
+        res.status(200).json(post);
+    } catch (error) {
+        return next(new HttpError(error));
+    }
+}
+
+// ----------- Dislike a post
+// PATCH : api/posts/:id/dislike
+//PROTECTED
+const dislikePost = async (req, res, next) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.user.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return next(new HttpError("Post not found.", 404));
+        }
+
+        if (post.dislikes.includes(userId)) {
+            // Undislike
+            post.dislikes = post.dislikes.filter(id => id.toString() !== userId);
+        } else {
+            // Dislike and remove from likes if present
+            post.dislikes.push(userId);
+            post.likes = post.likes.filter(id => id.toString() !== userId);
+        }
+        await post.save();
+        res.status(200).json(post);
+    } catch (error) {
+        return next(new HttpError(error));
+    }
+}
+
+// ----------- Add a comment
+// POST : api/posts/:id/comments
+//PROTECTED
+const addComment = async (req, res, next) => {
+    try {
+        const { text } = req.body;
+        const postId = req.params.id;
+        const userId = req.user.id;
+
+        if (!text) {
+            return next(new HttpError("Comment text is required.", 422));
+        }
+
+        const newComment = await Comment.create({
+            text,
+            author: userId,
+            post: postId
+        });
+
+        const commentWithAuthor = await Comment.findById(newComment._id).populate('author', 'name avatar');
+        res.status(201).json(commentWithAuthor);
+    } catch (error) {
+        return next(new HttpError(error));
+    }
+}
+
+// ----------- Get post comments
+// GET : api/posts/:id/comments
+//UNPROTECTED
+const getPostComments = async (req, res, next) => {
+    try {
+        const postId = req.params.id;
+        const comments = await Comment.find({ post: postId }).populate('author', 'name avatar').sort({ createdAt: -1 });
+        res.status(200).json(comments);
+    } catch (error) {
+        return next(new HttpError(error));
+    }
+}
+
 
 
 
@@ -233,7 +327,11 @@ module.exports = {
     getSinglePost,
     getUserPosts,
     editPost,
-    deletePost
+    deletePost,
+    likePost,
+    dislikePost,
+    addComment,
+    getPostComments
 
 
 }
