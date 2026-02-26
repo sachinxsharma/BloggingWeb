@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
 const { v4: uuid } = require("uuid");
 
 const User = require('../models/userModel');
@@ -102,44 +103,29 @@ const changeAvatar = async (req, res, next) => {
             return next(new HttpError("User not found", 404))
         }
 
-        // delete the old avatar if exists
-        if (user.avatar) {
-            const oldAvatarPath = path.join(__dirname, '..', 'uploads', user.avatar);
-            if (fs.existsSync(oldAvatarPath)) {
-                fs.unlink(oldAvatarPath, (err) => {
-                    if (err) console.error("Old avatar delete error:", err);
-                });
-            }
-        }
-
         const { avatar } = req.files;
 
-        // upload new avatar
+        // check file size
         if (avatar.size > 500000) {
             return next(new HttpError("Profile picture is too big. Should be less than 500kb", 422));
         }
 
-        if (!avatar.name) {
-            console.log("Full avatar object log:", avatar);
-            return next(new HttpError("File name is missing. Please try re-selecting the file.", 422));
+        // Upload to Cloudinary
+        const uploadResponse = await cloudinary.uploader.upload(avatar.tempFilePath, {
+            folder: 'bloggingWeb/avatars'
+        });
+
+        if (!uploadResponse) {
+            return next(new HttpError("Failed to upload avatar to Cloudinary.", 500));
         }
 
-        let fileName = avatar.name;
-        let splitFileName = fileName.split('.')
-        let newFileName = splitFileName[0] + uuid() + '.' + splitFileName[splitFileName.length - 1];
-
-        avatar.mv(path.join(__dirname, '..', 'uploads', newFileName), async (err) => {
-            if (err) {
-                return next(new HttpError(err))
-            }
-            const updatedAvatar = await User.findByIdAndUpdate(req.user.id, { avatar: newFileName }, { new: true })
-            if (!updatedAvatar) {
-                return next(new HttpError("Avatar couldn't be changed.", 422))
-            }
-            res.status(200).json(updatedAvatar)
-        })
+        const updatedAvatar = await User.findByIdAndUpdate(req.user.id, { avatar: uploadResponse.secure_url }, { new: true });
+        if (!updatedAvatar) {
+            return next(new HttpError("Avatar couldn't be changed.", 422));
+        }
+        res.status(200).json(updatedAvatar);
     } catch (error) {
-        return next(new HttpError(error))
+        return next(new HttpError(error));
     }
 }
 

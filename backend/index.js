@@ -4,6 +4,7 @@ const { connect } = require('mongoose');
 require('dotenv').config();
 const upload = require('express-fileupload');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
 
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
@@ -37,9 +38,20 @@ app.use(cors({
 }));
 
 // --------------------
+// Cloudinary Config
+// --------------------
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// --------------------
 // File Upload Middleware
 // --------------------
-app.use(upload());
+app.use(upload({
+  useTempFiles: true
+}));
 
 // --------------------
 // Static Folder (Uploads)
@@ -84,3 +96,5 @@ connect(process.env.MONGO_URI)
     console.error("❌ MongoDB Connection Error:", error);
     process.exit(1);
   });
+
+module.exports = app;

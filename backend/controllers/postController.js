@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const Comment = require('../models/commentModel');
 const path = require("path");
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 const { v4: uuid } = require('uuid');
 const HttpError = require('../models/errorModel');
 
@@ -19,34 +20,37 @@ const CreatePost = async (req, res, next) => {
             return next(new HttpError("fill in all fields and choose thumbnail", 422))
         }
         const { thumbnail } = req.files;
-        //check file size
+        // Check file size
         if (thumbnail.size > 2000000) {
-            return next(new HttpError("Thumbnail too big. File should be less than 2mb", 422))
+            return next(new HttpError("Thumbnail too big. File should be less than 2mb", 422));
         }
-        let fileName = thumbnail.name;
-        let splittedFileName = fileName.split('.')
-        let newFilename = splittedFileName[0] + uuid() + "." + splittedFileName[splittedFileName.length - 1]
-        thumbnail.mv(path.join(__dirname, '..', '/uploads', newFilename), async (err) => {
-            if (err) {
-                return next(new HttpError(err))
-            } else {
-                const newPost = await Post.create({
-                    title, category, description, thumbnail: newFilename,
-                    creator: req.user.id
-                })
-                if (!newPost) {
-                    return next(new HttpError("post couldn't be created", 422))
-                }
-                //find user and increse post count by +1
-                const currentUser = await User.findById(req.user.id);
-                const userPostCount = currentUser.posts + 1;
-                await User.findByIdAndUpdate(req.user.id, { posts: userPostCount })
 
-                res.status(201).json(newPost)
-            }
-        })
+        // Upload to Cloudinary
+        const uploadResponse = await cloudinary.uploader.upload(thumbnail.tempFilePath, {
+            folder: 'bloggingWeb/posts'
+        });
+
+        if (!uploadResponse) {
+            return next(new HttpError("Failed to upload thumbnail to Cloudinary.", 500));
+        }
+
+        const newPost = await Post.create({
+            title, category, description, thumbnail: uploadResponse.secure_url,
+            creator: req.user.id
+        });
+
+        if (!newPost) {
+            return next(new HttpError("post couldn't be created", 422));
+        }
+
+        // find user and increase post count by +1
+        const currentUser = await User.findById(req.user.id);
+        const userPostCount = currentUser.posts + 1;
+        await User.findByIdAndUpdate(req.user.id, { posts: userPostCount });
+
+        res.status(201).json(newPost);
     } catch (error) {
-        return next(new HttpError(error))
+        return next(new HttpError(error));
     }
 }
 
@@ -133,27 +137,22 @@ const editPost = async (req, res, next) => {
                     title, category, description
                 }, { new: true });
             } else {
-                // DELETE OLD THUMBNAIL FROM UPLOAD 
-                fs.unlink(path.join(__dirname, '..', 'uploads', oldPost.thumbnail), async (err) => {
-                    if (err) {
-                        return next(new HttpError(err));
-                    }
-                });
-                // Upload new thumbnail
+                // Upload new thumbnail to Cloudinary
                 const { thumbnail } = req.files;
                 // Check file size 
                 if (thumbnail.size > 2000000) {
                     return next(new HttpError("Thumbnail too big, should be less than 2MB", 422));
                 }
-                fileName = thumbnail.name;
-                let splittedFileName = fileName.split('.');
-                newFilename = splittedFileName[0] + uuid() + "." + splittedFileName[splittedFileName.length - 1];
-                thumbnail.mv(path.join(__dirname, '..', 'uploads', newFilename), async (err) => {
-                    if (err) {
-                        return next(new HttpError(err));
-                    }
+
+                const uploadResponse = await cloudinary.uploader.upload(thumbnail.tempFilePath, {
+                    folder: 'bloggingWeb/posts'
                 });
-                updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description, thumbnail: newFilename }, { new: true });
+
+                if (!uploadResponse) {
+                    return next(new HttpError("Failed to upload thumbnail to Cloudinary.", 500));
+                }
+
+                updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description, thumbnail: uploadResponse.secure_url }, { new: true });
             }
 
             if (!updatedPost) {

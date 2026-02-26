@@ -30,7 +30,7 @@ const PostItem = ({
         <img
           src={
             thumbnail
-              ? `${process.env.REACT_APP_ASSETS_URL}${thumbnail}`
+              ? thumbnail.startsWith('http') ? thumbnail : `${process.env.REACT_APP_ASSETS_URL}${thumbnail}`
               : "https://via.placeholder.com/300x200"
           }
           alt={title}
